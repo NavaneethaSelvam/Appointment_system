@@ -1,34 +1,113 @@
-from django.db import models
+
+import uuid
+
+from sqlalchemy import Column, Integer, String, Date, Time, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
+
+from database import Base
 
 
-class Appointment(models.Model):
+# ==========================================
+# USER
+# ==========================================
 
-    STATUS_CHOICES = [
-        ('Pending', 'Pending'),
-        ('Confirmed', 'Confirmed'),
-        ('Completed', 'Completed'),
-        ('Cancelled', 'Cancelled'),
-    ]
+class User(Base):
+    __tablename__ = "users"
 
-    name = models.CharField(max_length=100)
-
-    email = models.EmailField()
-
-    phone = models.CharField(max_length=15)
-
-    date = models.DateField()
-
-    time = models.TimeField()
-
-    service = models.CharField(max_length=100)
-
-    status = models.CharField(
-        max_length=20,
-        choices=STATUS_CHOICES,
-        default='Pending'
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    name = Column(
+        String(100),
+        nullable=False
+    )
 
-    def __str__(self):
-        return self.name
+    email = Column(
+        String(150),
+        unique=True,
+        nullable=False,
+        index=True
+    )
+
+    password_hash = Column(
+        String(255),
+        nullable=False
+    )
+
+    role = Column(
+        String(20),
+        default="user"
+    )
+
+    appointments = relationship(
+        "Appointment",
+        back_populates="user",
+        cascade="all, delete"
+    )
+
+
+# ==========================================
+# APPOINTMENT
+# ==========================================
+
+class Appointment(Base):
+    __tablename__ = "appointments"
+
+    id = Column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        index=True
+    )
+
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id"),
+        nullable=False
+    )
+
+    name = Column(
+        String(100),
+        nullable=False
+    )
+
+    email = Column(
+        String(150),
+        nullable=False
+    )
+
+    phone = Column(
+        String(20),
+        nullable=False
+    )
+
+    service = Column(
+        String(150),
+        nullable=False
+    )
+
+    date = Column(
+        Date,
+        nullable=False
+    )
+
+    time = Column(
+        Time,
+        nullable=False
+    )
+
+    status = Column(
+        String(30),
+        default="Pending",
+        nullable=False
+    )
+
+    user = relationship(
+        "User",
+        back_populates="appointments"
+    )
+
